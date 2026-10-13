@@ -268,6 +268,14 @@
       "click_to_downvote": "クリックして反対票を投じる",
       "click_to_view_upvotes": "クリックして賛成票を表示",
       "click_to_view_downvotes": "クリックして反対票を表示"
+    },
+    "export_pdf": {
+      "label": "PDF としてエクスポート",
+      "progress": "進捗",
+      "total_estimate": "見積もり合計",
+      "completed_estimate": "完了した見積もり",
+      "generated_on": "{date} に作成",
+      "error": "PDF をエクスポートできませんでした。もう一度お試しください。"
     }
   },
   "sub_work_item": {

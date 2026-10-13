@@ -268,6 +268,14 @@
       "click_to_downvote": "Click to downvote",
       "click_to_view_upvotes": "Click to view upvotes",
       "click_to_view_downvotes": "Click to view downvotes"
+    },
+    "export_pdf": {
+      "label": "PDF-ად ექსპორტი",
+      "progress": "პროგრესი",
+      "total_estimate": "სულ შეფასება",
+      "completed_estimate": "დასრულებული შეფასება",
+      "generated_on": "შექმნილია {date}",
+      "error": "PDF-ის ექსპორტი ვერ მოხერხდა. გთხოვთ, სცადოთ ხელახლა."
     }
   },
   "sub_work_item": {

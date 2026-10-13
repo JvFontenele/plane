@@ -268,6 +268,14 @@
       "click_to_downvote": "Klik untuk memberi suara turun",
       "click_to_view_upvotes": "Klik untuk melihat suara naik",
       "click_to_view_downvotes": "Klik untuk melihat suara turun"
+    },
+    "export_pdf": {
+      "label": "Ekspor sebagai PDF",
+      "progress": "Progres",
+      "total_estimate": "Total estimasi",
+      "completed_estimate": "Estimasi selesai",
+      "generated_on": "Dibuat pada {date}",
+      "error": "PDF tidak dapat diekspor. Silakan coba lagi."
     }
   },
   "sub_work_item": {

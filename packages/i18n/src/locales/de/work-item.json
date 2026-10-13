@@ -268,6 +268,14 @@
       "click_to_downvote": "Klicken zum Runterstimmen",
       "click_to_view_upvotes": "Klicken um Hochstimmen anzuzeigen",
       "click_to_view_downvotes": "Klicken um Runterstimmen anzuzeigen"
+    },
+    "export_pdf": {
+      "label": "Als PDF exportieren",
+      "progress": "Fortschritt",
+      "total_estimate": "Gesamtschätzung",
+      "completed_estimate": "Abgeschlossene Schätzung",
+      "generated_on": "Erstellt am {date}",
+      "error": "PDF konnte nicht exportiert werden. Bitte erneut versuchen."
     }
   },
   "sub_work_item": {

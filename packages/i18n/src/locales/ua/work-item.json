@@ -268,6 +268,14 @@
       "click_to_downvote": "Натисніть, щоб проголосувати проти",
       "click_to_view_upvotes": "Натисніть, щоб переглянути голоси за",
       "click_to_view_downvotes": "Натисніть, щоб переглянути голоси проти"
+    },
+    "export_pdf": {
+      "label": "Експортувати в PDF",
+      "progress": "Прогрес",
+      "total_estimate": "Загальна оцінка",
+      "completed_estimate": "Оцінка виконаного",
+      "generated_on": "Створено {date}",
+      "error": "Не вдалося експортувати PDF. Спробуйте ще раз."
     }
   },
   "sub_work_item": {

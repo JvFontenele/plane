@@ -8,7 +8,7 @@ import { useState } from "react";
 import { omit } from "lodash-es";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
-import { MoreHorizontalOutline } from "@makeplane/propel/icons";
+import { DownloadOutline, MoreHorizontalOutline } from "@makeplane/propel/icons";
 // plane imports
 import { ARCHIVABLE_STATE_GROUPS, EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import type { TIssue } from "@plane/types";
@@ -27,6 +27,7 @@ import {
 } from "@makeplane/propel/components/menu";
 import { toSideAndAlign } from "@plane/blocks/common";
 import { ContextMenu, getRenderableItems, resolveItemVariant } from "@plane/blocks/context-menu";
+import type { TContextMenuItem } from "@plane/blocks/context-menu";
 // hooks
 import { useIssues } from "@/hooks/store/use-issues";
 import { useProject } from "@/hooks/store/use-project";
@@ -34,6 +35,7 @@ import { useProjectState } from "@/hooks/store/use-project-state";
 import { useUserPermissions } from "@/hooks/store/user";
 // helper
 import { ArchiveIssueModal } from "../../archive-issue-modal";
+import { useExportWorkItemPdf } from "../../issue-detail/export-pdf/use-export-work-item-pdf";
 import { DeleteIssueModal } from "../../delete-issue-modal";
 import { CreateUpdateIssueModal } from "../../issue-modal/modal";
 import type { IQuickActionProps } from "../list/list-view-types";
@@ -80,6 +82,7 @@ export const WorkItemDetailQuickActions = observer(function WorkItemDetailQuickA
   const { issuesFilter } = useIssues(EIssuesStoreType.PROJECT);
   const { getStateById } = useProjectState();
   const { getProjectIdentifierById } = useProject();
+  const { exportPdf, isExporting: isExportingPdf } = useExportWorkItemPdf(workspaceSlug?.toString() ?? "", issue);
   // derived values
   const activeLayout = `${issuesFilter.issueFilters?.displayFilters?.layout} layout`;
   const stateDetails = getStateById(issue.state_id);
@@ -158,7 +161,22 @@ export const WorkItemDetailQuickActions = observer(function WorkItemDetailQuickA
   };
 
   //   const MENU_ITEMS = useWorkItemDetailMenuItems(menuItemProps);
-  const baseMenuItems = useWorkItemDetailMenuItems(menuItemProps);
+  const baseMenuItems = useWorkItemDetailMenuItems(menuItemProps).flatMap((item): TContextMenuItem[] =>
+    item.key === "open-in-new-tab"
+      ? [
+          item,
+          {
+            key: "export-pdf",
+            title: t("issue.export_pdf.label"),
+            icon: DownloadOutline,
+            action: () => {
+              void exportPdf();
+            },
+            disabled: isExportingPdf,
+          },
+        ]
+      : [item]
+  );
 
   const MENU_ITEMS = baseMenuItems
     // oxlint-disable-next-line oxc/no-map-spread

@@ -268,6 +268,14 @@
       "click_to_downvote": "點擊反對",
       "click_to_view_upvotes": "點擊查看贊成票",
       "click_to_view_downvotes": "點擊查看反對票"
+    },
+    "export_pdf": {
+      "label": "匯出為 PDF",
+      "progress": "進度",
+      "total_estimate": "總估算",
+      "completed_estimate": "已完成估算",
+      "generated_on": "產生於 {date}",
+      "error": "無法匯出 PDF，請再試一次。"
     }
   },
   "sub_work_item": {

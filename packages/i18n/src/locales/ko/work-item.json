@@ -268,6 +268,14 @@
       "click_to_downvote": "클릭하여 비추천",
       "click_to_view_upvotes": "클릭하여 추천 목록 보기",
       "click_to_view_downvotes": "클릭하여 비추천 목록 보기"
+    },
+    "export_pdf": {
+      "label": "PDF로 내보내기",
+      "progress": "진행률",
+      "total_estimate": "총 추정치",
+      "completed_estimate": "완료된 추정치",
+      "generated_on": "{date}에 생성됨",
+      "error": "PDF를 내보낼 수 없습니다. 다시 시도하십시오."
     }
   },
   "sub_work_item": {

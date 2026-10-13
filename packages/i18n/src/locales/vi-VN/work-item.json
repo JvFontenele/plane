@@ -268,6 +268,14 @@
       "click_to_downvote": "Nhấp để bỏ phiếu chống",
       "click_to_view_upvotes": "Nhấp để xem phiếu thuận",
       "click_to_view_downvotes": "Nhấp để xem phiếu chống"
+    },
+    "export_pdf": {
+      "label": "Xuất dưới dạng PDF",
+      "progress": "Tiến độ",
+      "total_estimate": "Tổng ước tính",
+      "completed_estimate": "Ước tính đã hoàn thành",
+      "generated_on": "Được tạo vào {date}",
+      "error": "Không thể xuất PDF. Vui lòng thử lại."
     }
   },
   "sub_work_item": {

@@ -268,6 +268,14 @@
       "click_to_downvote": "Klikněte pro hlasování dolů",
       "click_to_view_upvotes": "Klikněte pro zobrazení hlasů nahoru",
       "click_to_view_downvotes": "Klikněte pro zobrazení hlasů dolů"
+    },
+    "export_pdf": {
+      "label": "Exportovat jako PDF",
+      "progress": "Postup",
+      "total_estimate": "Celkový odhad",
+      "completed_estimate": "Dokončený odhad",
+      "generated_on": "Vygenerováno {date}",
+      "error": "PDF se nepodařilo exportovat. Zkuste to prosím znovu."
     }
   },
   "sub_work_item": {

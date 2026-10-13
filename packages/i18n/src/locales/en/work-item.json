@@ -268,6 +268,14 @@
       "click_to_downvote": "Click to downvote",
       "click_to_view_upvotes": "Click to view upvotes",
       "click_to_view_downvotes": "Click to view downvotes"
+    },
+    "export_pdf": {
+      "label": "Export as PDF",
+      "progress": "Progress",
+      "total_estimate": "Total estimate",
+      "completed_estimate": "Completed estimate",
+      "generated_on": "Generated on {date}",
+      "error": "Could not export the PDF. Please try again."
     }
   },
   "sub_work_item": {

@@ -268,6 +268,14 @@
       "click_to_downvote": "Olumsuz oy vermek için tıklayın",
       "click_to_view_upvotes": "Olumlu oyları görüntülemek için tıklayın",
       "click_to_view_downvotes": "Olumsuz oyları görüntülemek için tıklayın"
+    },
+    "export_pdf": {
+      "label": "PDF olarak dışa aktar",
+      "progress": "İlerleme",
+      "total_estimate": "Toplam tahmin",
+      "completed_estimate": "Tamamlanan tahmin",
+      "generated_on": "{date} tarihinde oluşturuldu",
+      "error": "PDF dışa aktarılamadı. Lütfen tekrar deneyin."
     }
   },
   "sub_work_item": {
