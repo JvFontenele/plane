@@ -10,6 +10,7 @@ import { EEstimateSystem } from "@plane/types";
 // local imports
 import { EstimateNumberInput } from "./number-input";
 import { EstimateTextInput } from "./text-input";
+import { EstimateTimeInput } from "./time-input";
 
 type TEstimateInputRootProps = {
   estimateType: TEstimateSystemKeys;
@@ -31,7 +32,7 @@ export function EstimateInputRoot(props: TEstimateInputRootProps) {
     case EEstimateSystem.CATEGORIES:
       return <EstimateTextInput value={value} handleEstimateInputValue={handleEstimateInputValue} />;
     case EEstimateSystem.TIME:
-      return <></>;
+      return <EstimateTimeInput value={value} handleEstimateInputValue={handleEstimateInputValue} />;
     default:
       return null;
   }
