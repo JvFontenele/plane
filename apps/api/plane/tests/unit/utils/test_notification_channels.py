@@ -223,6 +223,16 @@ class TestTelegramSend:
         }
 
     @patch("plane.utils.notification_channels._request")
+    def test_html_true_adds_parse_mode(self, mock_request):
+        mock_request.return_value = {
+            "ok": True,
+            "result": {"message_id": 42},
+        }
+        telegram_send("123:BOT", "chat123", "<b>hello</b>", html=True)
+        call_args = mock_request.call_args
+        assert call_args[1]["json"]["parse_mode"] == "HTML"
+
+    @patch("plane.utils.notification_channels._request")
     def test_ok_false_raises(self, mock_request):
         mock_request.return_value = {"ok": False, "description": "Bad"}
         with pytest.raises(ChannelError) as exc_info:
@@ -483,149 +493,112 @@ class TestCategorize:
 
 
 class TestBuildMessage:
-    def test_state_change(self):
-        ws = MagicMock()
-        ws.slug = "my-workspace"
-        n = MagicMock()
-        n.sender = "in_app:issue_activities:subscribed"
-        n.workspace = ws
-        n.data = {
-            "issue": {
-                "identifier": "PLN",
-                "sequence_id": 42,
-                "name": "Fix login",
-                "state_group": "backlog",
-            },
-            "issue_activity": {"field": "state", "new_value": "In Progress"},
-        }
-        msg = build_message(n, "https://app.plane.so")
-        assert "[PLN-42] Fix login" in msg
-        assert "In Progress" in msg
-        assert len(msg) <= 500
+    @staticmethod
+    def _make_notification(
+        receiver_lang="pt",
+        triggered_by_first="Ana",
+        triggered_by_last="Lima",
+        project_name=None,
+        workspace_slug="ws",
+        identifier="PRJ",
+        sequence_id=5,
+        name="Test Item",
+        field="state",
+        old_value="",
+        new_value="Doing",
+        state_group="backlog",
+        sender="in_app:issue_activities:subscribed",
+    ):
+        """Build a SimpleNamespace notification for testing."""
+        from types import SimpleNamespace
 
-    def test_comment(self):
-        ws = MagicMock()
-        ws.slug = "my-workspace"
-        n = MagicMock()
-        n.sender = "in_app:issue_activities:subscribed"
-        n.workspace = ws
-        n.data = {
-            "issue": {
-                "identifier": "PLN",
-                "sequence_id": 1,
-                "name": "Bug report",
-                "state_group": "unconfirmed",
+        profile = SimpleNamespace(language=receiver_lang)
+        receiver = SimpleNamespace(profile=profile)
+        triggered = SimpleNamespace(
+            first_name=triggered_by_first,
+            last_name=triggered_by_last,
+            display_name=f"{triggered_by_first} {triggered_by_last}".strip(),
+        )
+        workspace = SimpleNamespace(slug=workspace_slug)
+        proj = SimpleNamespace(name=project_name) if project_name else None
+        n = SimpleNamespace(
+            receiver=receiver,
+            triggered_by=triggered,
+            workspace=workspace,
+            project=proj,
+            sender=sender,
+            data={
+                "issue": {
+                    "identifier": identifier,
+                    "sequence_id": sequence_id,
+                    "name": name,
+                    "state_group": state_group,
+                },
+                "issue_activity": {
+                    "field": field,
+                    "old_value": old_value,
+                    "new_value": new_value,
+                },
             },
-            "issue_activity": {"field": "comment", "new_value": "bad"},
-        }
-        msg = build_message(n, "https://app.plane.so")
-        assert "New comment" in msg
-        assert len(msg) <= 500
+        )
+        return n
 
-    def test_mention(self):
-        ws = MagicMock()
-        ws.slug = "my-workspace"
-        n = MagicMock()
-        n.sender = "in_app:issue_activities:mentioned"
-        n.workspace = ws
-        n.data = {
-            "issue": {
-                "identifier": "PLN",
-                "sequence_id": 5,
-                "name": "Feature X",
-                "state_group": "backlog",
-            },
-            "issue_activity": {"field": "comment"},
-        }
-        msg = build_message(n, "https://app.plane.so")
-        assert "You were mentioned" in msg
-        assert len(msg) <= 500
+    def test_pt_state_change(self):
+        n = self._make_notification(receiver_lang="pt", old_value="Todo", new_value="Doing")
+        msg = build_message(n, "https://app.plane.so", "telegram")
+        assert "<b>Ana Lima</b> alterou o estado" in msg
+        assert "Todo" in msg
+        assert "Doing" in msg
+        assert "ws/browse/PRJ-5/" in msg
 
-    def test_completed(self):
-        ws = MagicMock()
-        ws.slug = "my-workspace"
-        n = MagicMock()
-        n.sender = "in_app:issue_activities:subscribed"
-        n.workspace = ws
-        n.data = {
-            "issue": {
-                "identifier": "PLN",
-                "sequence_id": 10,
-                "name": "Deploy v2",
-                "state_group": "completed",
-            },
-            "issue_activity": {"field": "state"},
-        }
-        msg = build_message(n, "https://app.plane.so")
-        assert "Marked as completed" in msg
-        assert len(msg) <= 500
+    def test_en_priority(self):
+        n = self._make_notification(receiver_lang="en", field="priority", old_value="high", new_value="urgent")
+        msg = build_message(n, "https://app.plane.so", "telegram")
+        assert "changed the priority" in msg
+        assert "Urgent" in msg
+        assert "High" in msg
 
-    def test_property_change(self):
-        ws = MagicMock()
-        ws.slug = "my-workspace"
-        n = MagicMock()
-        n.sender = "in_app:issue_activities:subscribed"
-        n.workspace = ws
-        n.data = {
-            "issue": {
-                "identifier": "PLN",
-                "sequence_id": 3,
-                "name": "Tweak",
-                "state_group": "backlog",
-            },
-            "issue_activity": {"field": "priority", "new_value": "high"},
-        }
-        msg = build_message(n, "https://app.plane.so")
-        assert "Field priority changed" in msg
-        assert len(msg) <= 500
+    def test_telegram_escapes_html(self):
+        n = self._make_notification(name="<script>alert(1)</script>")
+        msg = build_message(n, "https://app.plane.so", "telegram")
+        assert "<script>" not in msg
+        assert msg.startswith("<b>PRJ-5 · &lt;script&gt;")
+        assert '<a href="' in msg
 
-    def test_no_workspace(self):
-        n = MagicMock()
-        n.workspace = None
-        n.data = {
-            "issue": {
-                "identifier": "PLN",
-                "sequence_id": 1,
-                "name": "Test",
-                "state_group": "backlog",
-            },
-            "issue_activity": {"field": "priority"},
-        }
-        msg = build_message(n, "https://app.plane.so")
-        assert len(msg) <= 500
-        assert "browse/" not in msg
+    def test_whatsapp_comment(self):
+        n = self._make_notification(
+            receiver_lang="pt",
+            field="comment",
+            new_value="<p>This is <b>bold</b> text</p>",
+            triggered_by_first="",
+            triggered_by_last="",
+        )
+        msg = build_message(n, "https://app.plane.so", "whatsapp")
+        assert "> " in msg
+        assert "<p>" not in msg
+        assert "This is bold text" in msg
 
-    def test_long_title_capped_at_500(self):
-        ws = MagicMock()
-        ws.slug = "my-workspace"
-        long_name = "A" * 450
-        n = MagicMock()
-        n.workspace = ws
-        n.data = {
-            "issue": {
-                "identifier": "LONGID",
-                "sequence_id": 99999,
-                "name": long_name,
-                "state_group": "backlog",
-            },
-            "issue_activity": {"field": "priority"},
-        }
-        msg = build_message(n, "https://app.plane.so")
-        assert len(msg) <= 500
+    def test_triggered_by_none(self):
+        from types import SimpleNamespace
 
-    def test_link_includes_workspace(self):
-        ws = MagicMock()
-        ws.slug = "testws"
-        n = MagicMock()
-        n.workspace = ws
-        n.data = {
-            "issue": {
-                "identifier": "PLN",
-                "sequence_id": 7,
-                "name": "Test",
-                "state_group": "backlog",
+        profile = SimpleNamespace(language="pt")
+        receiver = SimpleNamespace(profile=profile)
+        n = SimpleNamespace(
+            receiver=receiver,
+            triggered_by=None,
+            workspace=SimpleNamespace(slug="ws"),
+            project=None,
+            sender="in_app:issue_activities:subscribed",
+            data={
+                "issue": {"identifier": "PRJ", "sequence_id": 5, "name": "Test", "state_group": "backlog"},
+                "issue_activity": {"field": "state", "old_value": "", "new_value": "Doing"},
             },
-            "issue_activity": {"field": "priority"},
-        }
-        msg = build_message(n, "https://app.plane.so")
-        assert "testws/browse/PLN-7/" in msg
+        )
+        msg = build_message(n, "https://app.plane.so", "telegram")
+        assert "Alguém" in msg
+
+    def test_assignees_removed(self):
+        n = self._make_notification(receiver_lang="pt", field="assignees", old_value="Ana", new_value="")
+        msg = build_message(n, "https://app.plane.so", "telegram")
+        assert "removeu" in msg
+        assert "dos responsáveis" in msg

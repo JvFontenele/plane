@@ -4,7 +4,11 @@
 
 """Notification channel utilities for Telegram and Evolution API (WhatsApp)."""
 
+import html
+import re
+
 import requests
+from django.utils.html import strip_tags
 from urllib.parse import urlparse
 
 from plane.license.utils.instance_value import get_configuration_value
@@ -123,13 +127,15 @@ def telegram_get_me(token):
     return resp["result"]
 
 
-def telegram_send(token, chat_id, text):
+def telegram_send(token, chat_id, text, html=False):
     """Send a message and return the message_id string."""
     payload = {
         "chat_id": chat_id,
         "text": text,
         "disable_web_page_preview": True,
     }
+    if html:
+        payload["parse_mode"] = "HTML"
     resp = _request(
         "POST",
         _telegram_base(token) + "sendMessage",
@@ -277,41 +283,301 @@ def categorize(notification):
     return "property_change"
 
 
-def build_message(notification, web_url):
-    """Build a short notification message (max 500 chars)."""
+T = {
+    "pt": {
+        "someone": "Alguém",
+        "state": "{actor} alterou o estado: {old} → {new}",
+        "completed": "{actor} concluiu o item ✅",
+        "priority": "{actor} alterou a prioridade: {old} → {new}",
+        "assigned": "{actor} atribuiu a {new}",
+        "unassigned": "{actor} removeu {old} dos responsáveis",
+        "label_added": "{actor} adicionou o rótulo {new}",
+        "label_removed": "{actor} removeu o rótulo {old}",
+        "name": "{actor} renomeou o item: {old} → {new}",
+        "description": "{actor} atualizou a descrição",
+        "start_date": "{actor} alterou a data de início: {old} → {new}",
+        "target_date": "{actor} alterou o prazo: {old} → {new}",
+        "parent": "{actor} alterou o item pai para {new}",
+        "cycles": "{actor} moveu para o ciclo {new}",
+        "modules": "{actor} adicionou ao módulo {new}",
+        "estimate": "{actor} alterou a estimativa: {old} → {new}",
+        "comment": "{actor} comentou:",
+        "mention": "{actor} mencionou você",
+        "attachment": "{actor} adicionou um anexo",
+        "link": "{actor} adicionou um link",
+        "archived": "{actor} arquivou o item",
+        "generic": "{actor} atualizou {field}",
+        "open": "Abrir no Plane",
+        "project": "Projeto",
+    },
+    "en": {
+        "someone": "Someone",
+        "state": "{actor} changed the state: {old} → {new}",
+        "completed": "{actor} completed the item ✅",
+        "priority": "{actor} changed the priority: {old} → {new}",
+        "assigned": "{actor} assigned {new}",
+        "unassigned": "{actor} removed {old} from assignees",
+        "label_added": "{actor} added the label {new}",
+        "label_removed": "{actor} removed the label {old}",
+        "name": "{actor} renamed the item: {old} → {new}",
+        "description": "{actor} updated the description",
+        "start_date": "{actor} changed the start date: {old} → {new}",
+        "target_date": "{actor} changed the due date: {old} → {new}",
+        "parent": "{actor} set the parent to {new}",
+        "cycles": "{actor} moved it to cycle {new}",
+        "modules": "{actor} added it to module {new}",
+        "estimate": "{actor} changed the estimate: {old} → {new}",
+        "comment": "{actor} commented:",
+        "mention": "{actor} mentioned you",
+        "attachment": "{actor} added an attachment",
+        "link": "{actor} added a link",
+        "archived": "{actor} archived the item",
+        "generic": "{actor} updated {field}",
+        "open": "Open in Plane",
+        "project": "Project",
+    },
+}
+
+PRIORITY = {
+    "pt": {"urgent": "Urgente", "high": "Alta", "medium": "Média", "low": "Baixa", "none": "Nenhuma"},
+    "en": {"urgent": "Urgent", "high": "High", "medium": "Medium", "low": "Low", "none": "None"},
+}
+
+
+def _clean(v):
+    s = str(v).strip()
+    if s in ("None", "null", ""):
+        return ""
+    return s
+
+
+def _fmt_date(v):
+    s = _clean(v)
+    if not s:
+        return "—"
+    if re.match(r"^\d{4}-\d{2}-\d{2}", s):
+        parts = s[:10].split("-")
+        return f"{parts[2]}/{parts[1]}/{parts[0]}"
+    return s
+
+
+def _excerpt(html_text, limit=300):
+    s = strip_tags(html_text)
+    s = html.unescape(s)
+    s = re.sub(r"\s+", " ", s).strip()
+    if len(s) > limit:
+        s = s[:limit] + "…"
+    return s
+
+
+def _lang(notification):
+    try:
+        profile = notification.receiver.profile
+        raw = getattr(profile, "language", "en") or "en"
+        if isinstance(raw, str) and raw.startswith("pt"):
+            return "pt"
+        return "en"
+    except Exception:
+        return "en"
+
+
+def _actor(notification):
+    u = getattr(notification, "triggered_by", None)
+    if u is None:
+        lang = _lang(notification)
+        return T[lang]["someone"]
+    first = getattr(u, "first_name", "") or ""
+    last = getattr(u, "last_name", "") or ""
+    name = f"{first} {last}".strip()
+    if not name:
+        name = getattr(u, "display_name", "Alguém") or "Alguém"
+    return name
+
+
+# _b/_i wrap every dynamic value, so they escape for Telegram's HTML parse mode:
+# a "<" in a user, state or item name would otherwise make Telegram reject the message.
+def _b(text, channel):
+    if channel == "whatsapp":
+        return f"*{text}*"
+    return f"<b>{html.escape(text)}</b>"
+
+
+def _i(text, channel):
+    if channel == "whatsapp":
+        return f"_{text}_"
+    return f"<i>{html.escape(text)}</i>"
+
+
+def _esc(text, channel):
+    if channel == "telegram":
+        return html.escape(text)
+    return text
+
+
+def _fmt_val(v, channel):
+    s = _clean(v)
+    if not s:
+        return "—"
+    return _i(s, channel)
+
+
+def build_message(notification, web_url, channel="telegram"):
+    """Build a formatted notification message for the given channel."""
+    lang = _lang(notification)
+    t = T[lang]
+    actor = _b(_actor(notification), channel)
     data = getattr(notification, "data", {})
     issue = data.get("issue", {})
     issue_activity = data.get("issue_activity", {})
+    sender = getattr(notification, "sender", "")
     workspace = getattr(notification, "workspace", None)
+    project = getattr(notification, "project", None)
 
-    identifier = issue.get("identifier", "")
-    sequence_id = issue.get("sequence_id", "")
-    name = issue.get("name", "")
+    identifier = _clean(issue.get("identifier", ""))
+    sequence_id = _clean(issue.get("sequence_id", ""))
+    name = _clean(issue.get("name", ""))
+    field = _clean(issue_activity.get("field", ""))
+    old_value = issue_activity.get("old_value", "")
     new_value = issue_activity.get("new_value", "")
-    field = issue_activity.get("field", "")
+    state_group = issue.get("state_group", "")
 
-    if "mentioned" in getattr(notification, "sender", ""):
-        description = "You were mentioned"
+    # Build title line
+    title = _b(f"{identifier}-{sequence_id} · {name}", channel)
+
+    # Determine action key and format
+    if "mentioned" in sender:
+        key = "mention"
+        action = t[key].format(actor=actor)
+    elif field == "state" and state_group == "completed":
+        key = "completed"
+        action = t[key].format(actor=actor)
     elif field == "state":
-        state_group = issue.get("state_group", "")
-        if state_group == "completed":
-            description = "Marked as completed"
-        else:
-            description = "State changed to " + str(new_value)
+        key = "state"
+        old_s = _fmt_val(old_value, channel)
+        new_s = _fmt_val(new_value, channel)
+        action = t[key].format(actor=actor, old=old_s, new=new_s)
+    elif field == "priority":
+        key = "priority"
+        old_raw = _clean(old_value)
+        new_raw = _clean(new_value)
+        old_map = PRIORITY.get(lang, {})
+        old_s = old_map.get(old_raw, old_raw) if old_raw else "—"
+        new_s = old_map.get(new_raw, new_raw) if new_raw else "—"
+        old_s = _i(old_s, channel)
+        new_s = _i(new_s, channel)
+        action = t[key].format(actor=actor, old=old_s, new=new_s)
+    elif field == "assignees":
+        key = "assigned" if new_value else "unassigned"
+        old_s = _fmt_val(old_value, channel)
+        new_s = _fmt_val(new_value, channel)
+        action = t[key].format(actor=actor, old=old_s, new=new_s)
+    elif field == "labels":
+        key = "label_added" if new_value else "label_removed"
+        old_s = _fmt_val(old_value, channel)
+        new_s = _fmt_val(new_value, channel)
+        action = t[key].format(actor=actor, old=old_s, new=new_s)
+    elif field == "name":
+        key = "name"
+        old_s = _fmt_val(old_value, channel)
+        new_s = _fmt_val(new_value, channel)
+        action = t[key].format(actor=actor, old=old_s, new=new_s)
+    elif field == "description":
+        key = "description"
+        action = t[key].format(actor=actor)
+    elif field == "start_date":
+        key = "start_date"
+        old_s = _fmt_val(_fmt_date(old_value), channel)
+        new_s = _fmt_val(_fmt_date(new_value), channel)
+        action = t[key].format(actor=actor, old=old_s, new=new_s)
+    elif field == "target_date":
+        key = "target_date"
+        old_s = _fmt_val(_fmt_date(old_value), channel)
+        new_s = _fmt_val(_fmt_date(new_value), channel)
+        action = t[key].format(actor=actor, old=old_s, new=new_s)
+    elif field == "parent":
+        key = "parent"
+        new_s = _fmt_val(new_value, channel)
+        action = t[key].format(actor=actor, new=new_s)
+    elif field == "cycles":
+        key = "cycles"
+        new_s = _fmt_val(new_value, channel)
+        action = t[key].format(actor=actor, new=new_s)
+    elif field == "modules":
+        key = "modules"
+        new_s = _fmt_val(new_value, channel)
+        action = t[key].format(actor=actor, new=new_s)
+    elif field.startswith("estimate"):
+        key = "estimate"
+        old_s = _fmt_val(old_value, channel)
+        new_s = _fmt_val(new_value, channel)
+        action = t[key].format(actor=actor, old=old_s, new=new_s)
     elif field == "comment":
-        description = "New comment"
+        key = "comment"
+        action = t[key].format(actor=actor)
+    elif field == "attachment":
+        key = "attachment"
+        action = t[key].format(actor=actor)
+    elif field == "link":
+        key = "link"
+        action = t[key].format(actor=actor)
+    elif field == "archived_at":
+        key = "archived"
+        action = t[key].format(actor=actor)
     else:
-        description = "Field " + field + " changed"
+        key = "generic"
+        field_label = _clean(field)
+        action = t[key].format(actor=actor, field=_esc(field_label, channel))
 
-    title = "[" + identifier + "-" + str(sequence_id) + "] " + name
-    if workspace:
-        link = web_url + "/" + workspace.slug + "/browse/" + identifier + "-" + str(sequence_id) + "/"
-    else:
-        link = ""
+    # Build parts
+    parts = [title, action]
 
-    parts = [title, description]
-    if link:
+    # Comment excerpt
+    if field == "comment" and new_value:
+        excerpt_text = _excerpt(new_value)
+        if channel == "telegram":
+            parts.append(f"<blockquote>{_esc(excerpt_text, channel)}</blockquote>")
+        else:
+            parts.append(f"> {excerpt_text}")
+
+    # Project
+    if project and project.name:
+        parts.append(f"📁 {_esc(project.name, channel)}")
+
+    # Link
+    if workspace and identifier and sequence_id:
+        url = f"{web_url.rstrip('/')}/{workspace.slug}/browse/{identifier}-{sequence_id}/"
+        if channel == "telegram":
+            link = f'<a href="{_esc(url, channel)}">{t["open"]}</a>'
+        else:
+            link = f"🔗 {url}"
         parts.append(link)
 
-    message = " ".join(parts)
-    return message[:500]
+    message = "\n".join(parts)
+
+    # Cut excerpt if over 1500 chars (don't cut the link)
+    if len(message) > 1500 and field == "comment" and new_value:
+        # Rebuild without comment excerpt to find the cutoff point
+        base_parts = [title, action]
+        if project and project.name:
+            base_parts.append(f"📁 {_esc(project.name, channel)}")
+        if workspace and identifier and sequence_id:
+            url = f"{web_url.rstrip('/')}/{workspace.slug}/browse/{identifier}-{sequence_id}/"
+            if channel == "telegram":
+                link = f'<a href="{_esc(url, channel)}">{t["open"]}</a>'
+            else:
+                link = f"🔗 {url}"
+            base_parts.append(link)
+        base_len = len("\n".join(base_parts)) + 3  # +3 for "\n> "
+        if channel == "telegram":
+            base_len += 2  # for "<blockquote>"
+        avail = 1500 - base_len
+        if avail > 0:
+            short = _excerpt(new_value, avail)
+            if channel == "telegram":
+                parts = base_parts + [f"<blockquote>{_esc(short, channel)}</blockquote>"]
+            else:
+                parts = base_parts + [f"> {short}"]
+        else:
+            parts = base_parts
+
+    return message

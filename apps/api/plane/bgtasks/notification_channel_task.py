@@ -138,12 +138,13 @@ def deliver_channel_notification(self, delivery_id):
         return
 
     web_url = getattr(settings, "WEB_URL", None) or ""
-    text = build_message(n, web_url)
 
     try:
         if channel == "telegram":
-            external_id = telegram_send(config["TELEGRAM_BOT_TOKEN"], row.address, text)
+            text = build_message(n, web_url, "telegram")
+            external_id = telegram_send(config["TELEGRAM_BOT_TOKEN"], row.address, text, html=True)
         elif channel == "whatsapp":
+            text = build_message(n, web_url, "whatsapp")
             external_id = whatsapp_send(config, row.address, text)
         else:
             skip("unknown_channel")
