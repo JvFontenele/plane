@@ -250,6 +250,60 @@ unsplash_config_variables = [
     },
 ]
 
+notification_channel_config_variables = [
+    {
+        "key": "ENABLE_TELEGRAM_NOTIFICATIONS",
+        "value": os.environ.get("ENABLE_TELEGRAM_NOTIFICATIONS", "0"),
+        "category": "NOTIFICATIONS",
+        "is_encrypted": False,
+    },
+    {
+        "key": "TELEGRAM_BOT_TOKEN",
+        "value": os.environ.get("TELEGRAM_BOT_TOKEN", ""),
+        "category": "NOTIFICATIONS",
+        "is_encrypted": True,
+    },
+    {
+        "key": "TELEGRAM_BOT_USERNAME",
+        "value": os.environ.get("TELEGRAM_BOT_USERNAME", ""),
+        "category": "NOTIFICATIONS",
+        "is_encrypted": False,
+    },
+    {
+        "key": "ENABLE_WHATSAPP_NOTIFICATIONS",
+        "value": os.environ.get("ENABLE_WHATSAPP_NOTIFICATIONS", "0"),
+        "category": "NOTIFICATIONS",
+        "is_encrypted": False,
+    },
+    {
+        "key": "WHATSAPP_PROVIDER_URL",
+        "value": os.environ.get("WHATSAPP_PROVIDER_URL", ""),
+        "category": "NOTIFICATIONS",
+        "is_encrypted": False,
+    },
+    {
+        "key": "WHATSAPP_API_KEY",
+        "value": os.environ.get("WHATSAPP_API_KEY", ""),
+        "category": "NOTIFICATIONS",
+        "is_encrypted": True,
+    },
+    {
+        "key": "WHATSAPP_INSTANCE_NAME",
+        "value": os.environ.get("WHATSAPP_INSTANCE_NAME", "plane"),
+        "category": "NOTIFICATIONS",
+        "is_encrypted": False,
+    },
+    {
+        "key": "NOTIFICATION_CHANNEL_EVENTS",
+        "value": os.environ.get(
+            "NOTIFICATION_CHANNEL_EVENTS",
+            "state_change,issue_completed,comment,mention,property_change",
+        ),
+        "category": "NOTIFICATIONS",
+        "is_encrypted": False,
+    },
+]
+
 core_config_variables = [
     *authentication_config_variables,
     *workspace_management_config_variables,
@@ -260,4 +314,5 @@ core_config_variables = [
     *smtp_config_variables,
     *llm_config_variables,
     *unsplash_config_variables,
+    *notification_channel_config_variables,
 ]

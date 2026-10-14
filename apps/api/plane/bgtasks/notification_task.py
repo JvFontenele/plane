@@ -30,6 +30,9 @@ from django.db.models import Subquery
 from celery import shared_task
 from bs4 import BeautifulSoup
 
+# Local imports
+from plane.bgtasks.notification_channel_task import dispatch_channel_notifications
+
 
 # =========== Issue Description Html Parsing and notification Functions ======================
 
@@ -668,6 +671,10 @@ def notifications(
             # Bulk create notifications
             Notification.objects.bulk_create(bulk_notifications, batch_size=100)
             EmailNotificationLog.objects.bulk_create(bulk_email_logs, batch_size=100, ignore_conflicts=True)
+            if bulk_notifications:
+                dispatch_channel_notifications.delay(
+                    [str(n.id) for n in bulk_notifications]
+                )
         return
     except Exception as e:
         print(e)

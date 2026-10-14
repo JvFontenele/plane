@@ -18,6 +18,14 @@ from plane.license.api.views import (
     InstanceAdminUserSessionEndpoint,
     InstanceWorkSpaceAvailabilityCheckEndpoint,
     InstanceWorkSpaceEndpoint,
+    NotificationChannelConfigEndpoint,
+    TelegramCheckEndpoint,
+    TelegramTestEndpoint,
+    WhatsAppStatusEndpoint,
+    WhatsAppConnectEndpoint,
+    WhatsAppLogoutEndpoint,
+    WhatsAppTestEndpoint,
+    NotificationDeliveryLogEndpoint,
 )
 
 urlpatterns = [
@@ -71,4 +79,44 @@ urlpatterns = [
         name="instance-workspace-availability",
     ),
     path("workspaces/", InstanceWorkSpaceEndpoint.as_view(), name="instance-workspace"),
+    path(
+        "notification-channel/",
+        NotificationChannelConfigEndpoint.as_view(),
+        name="notification-channel",
+    ),
+    path(
+        "notification-channel/telegram/check/",
+        TelegramCheckEndpoint.as_view(),
+        name="notification-channel-telegram-check",
+    ),
+    path(
+        "notification-channel/telegram/test/",
+        TelegramTestEndpoint.as_view(),
+        name="notification-channel-telegram-test",
+    ),
+    path(
+        "notification-channel/whatsapp/status/",
+        WhatsAppStatusEndpoint.as_view(),
+        name="notification-channel-whatsapp-status",
+    ),
+    path(
+        "notification-channel/whatsapp/connect/",
+        WhatsAppConnectEndpoint.as_view(),
+        name="notification-channel-whatsapp-connect",
+    ),
+    path(
+        "notification-channel/whatsapp/logout/",
+        WhatsAppLogoutEndpoint.as_view(),
+        name="notification-channel-whatsapp-logout",
+    ),
+    path(
+        "notification-channel/whatsapp/test/",
+        WhatsAppTestEndpoint.as_view(),
+        name="notification-channel-whatsapp-test",
+    ),
+    path(
+        "notification-channel/delivery-log/",
+        NotificationDeliveryLogEndpoint.as_view(),
+        name="notification-channel-delivery-log",
+    ),
 ]

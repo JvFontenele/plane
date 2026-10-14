@@ -21,9 +21,16 @@ from plane.bgtasks.cleanup_task import (
     delete_api_logs,
     delete_email_notification_logs,
     delete_webhook_logs,
+    delete_notification_deliveries,
     process_cleanup_task,
 )
-from plane.db.models import APIActivityLog, EmailNotificationLog, WebhookLog
+from plane.db.models import (
+    APIActivityLog,
+    EmailNotificationLog,
+    Notification,
+    NotificationDelivery,
+    WebhookLog,
+)
 from plane.tests.factories import UserFactory, WorkspaceFactory
 
 
@@ -141,3 +148,38 @@ class TestProcessCleanupTaskErrorHandling:
 
         # Should not raise even though the delete blows up.
         process_cleanup_task(lambda: iter([1, 2, 3]), _BoomModel, "Boom")
+
+
+def _make_notification_delivery(notification, channel, created_at):
+    delivery = NotificationDelivery.objects.create(
+        notification=notification,
+        channel=channel,
+    )
+    NotificationDelivery.all_objects.filter(pk=delivery.pk).update(created_at=created_at)
+    return delivery
+
+
+@pytest.mark.unit
+@pytest.mark.django_db
+class TestDeleteNotificationDeliveries:
+    def test_expired_deliveries_are_hard_deleted(self):
+        workspace = WorkspaceFactory()
+        user = UserFactory()
+        notification = Notification.objects.create(
+            workspace=workspace,
+            receiver=user,
+            entity_name="issue",
+            title="t",
+            sender="in_app:issue_activities:updated",
+            data={},
+        )
+        retention_days = settings.NOTIFICATION_DELIVERY_RETENTION_DAYS
+        expired = _make_notification_delivery(
+            notification, "telegram", timezone.now() - timedelta(days=retention_days + 1)
+        )
+        _make_notification_delivery(notification, "whatsapp", timezone.now() - timedelta(days=1))
+
+        delete_notification_deliveries()
+
+        assert not NotificationDelivery.all_objects.filter(pk=expired.pk).exists()
+        assert NotificationDelivery.all_objects.filter(channel="whatsapp").exists()

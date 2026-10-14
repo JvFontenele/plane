@@ -23,6 +23,7 @@ from plane.db.models import (
     APIActivityLog,
     IssueDescriptionVersion,
     WebhookLog,
+    NotificationDelivery,
 )
 from plane.utils.exception_logger import log_exception
 
@@ -158,6 +159,17 @@ def get_webhook_logs_queryset():
     )
 
 
+def get_notification_deliveries_queryset():
+    """Get notification deliveries older than the notification retention window."""
+    cutoff_time = timezone.now() - timedelta(days=settings.NOTIFICATION_DELIVERY_RETENTION_DAYS)
+    logger.info(f"Notification deliveries cutoff time: {cutoff_time}")
+    return (
+        NotificationDelivery.all_objects.filter(created_at__lte=cutoff_time)
+        .values_list("id", flat=True)
+        .iterator(chunk_size=BATCH_SIZE)
+    )
+
+
 @shared_task
 def delete_api_logs():
     """Delete old API activity logs."""
@@ -205,4 +217,14 @@ def delete_webhook_logs():
         queryset_func=get_webhook_logs_queryset,
         model=WebhookLog,
         task_name="Webhook Log",
+    )
+
+
+@shared_task
+def delete_notification_deliveries():
+    """Delete old notification deliveries."""
+    process_cleanup_task(
+        queryset_func=get_notification_deliveries_queryset,
+        model=NotificationDelivery,
+        task_name="Notification Delivery",
     )

@@ -26,3 +26,15 @@ from .workspace import (
     InstanceWorkSpaceAvailabilityCheckEndpoint,
     InstanceWorkSpaceEndpoint,
 )
+
+
+from .notification_channel import (
+    NotificationChannelConfigEndpoint,
+    TelegramCheckEndpoint,
+    TelegramTestEndpoint,
+    WhatsAppStatusEndpoint,
+    WhatsAppConnectEndpoint,
+    WhatsAppLogoutEndpoint,
+    WhatsAppTestEndpoint,
+    NotificationDeliveryLogEndpoint,
+)

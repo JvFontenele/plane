@@ -10,6 +10,11 @@ from plane.app.views import (
     UnreadNotificationEndpoint,
     MarkAllReadNotificationViewSet,
     UserNotificationPreferenceEndpoint,
+    UserNotificationChannelEndpoint,
+    TelegramLinkEndpoint,
+    TelegramVerifyEndpoint,
+    WhatsAppLinkEndpoint,
+    WhatsAppVerifyEndpoint,
 )
 
 
@@ -48,5 +53,23 @@ urlpatterns = [
         "users/me/notification-preferences/",
         UserNotificationPreferenceEndpoint.as_view(),
         name="user-notification-preferences",
+    ),
+    path(
+        "users/me/notification-channels/",
+        UserNotificationChannelEndpoint.as_view(http_method_names=["get", "options"]),
+        name="user-notification-channels",
+    ),
+    path("users/me/notification-channels/telegram/link/", TelegramLinkEndpoint.as_view(), name="user-telegram-link"),
+    path(
+        "users/me/notification-channels/telegram/verify/", TelegramVerifyEndpoint.as_view(), name="user-telegram-verify"
+    ),
+    path("users/me/notification-channels/whatsapp/link/", WhatsAppLinkEndpoint.as_view(), name="user-whatsapp-link"),
+    path(
+        "users/me/notification-channels/whatsapp/verify/", WhatsAppVerifyEndpoint.as_view(), name="user-whatsapp-verify"
+    ),
+    path(
+        "users/me/notification-channels/<str:channel>/",
+        UserNotificationChannelEndpoint.as_view(http_method_names=["patch", "delete", "options"]),
+        name="user-notification-channel",
     ),
 ]

@@ -238,3 +238,11 @@ from .notification.base import MarkAllReadNotificationViewSet
 from .user.base import AccountEndpoint, ProfileEndpoint, UserSessionEndpoint
 
 from .timezone.base import TimezoneEndpoint
+
+from .notification.channel import (
+    UserNotificationChannelEndpoint,
+    TelegramLinkEndpoint,
+    TelegramVerifyEndpoint,
+    WhatsAppLinkEndpoint,
+    WhatsAppVerifyEndpoint,
+)

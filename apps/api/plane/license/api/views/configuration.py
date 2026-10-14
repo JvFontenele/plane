@@ -34,14 +34,16 @@ class InstanceConfigurationEndpoint(BaseAPIView):
 
     @cache_response(60 * 60 * 2, user=False)
     def get(self, request):
-        instance_configurations = InstanceConfiguration.objects.all()
+        instance_configurations = InstanceConfiguration.objects.exclude(category="NOTIFICATIONS")
         serializer = InstanceConfigurationSerializer(instance_configurations, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @invalidate_cache(path="/api/instances/configurations/", user=False)
     @invalidate_cache(path="/api/instances/", user=False)
     def patch(self, request):
-        configurations = InstanceConfiguration.objects.filter(key__in=request.data.keys())
+        configurations = InstanceConfiguration.objects.exclude(category="NOTIFICATIONS").filter(
+            key__in=request.data.keys()
+        )
 
         bulk_configurations = []
         for configuration in configurations:

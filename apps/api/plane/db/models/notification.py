@@ -147,3 +147,70 @@ class EmailNotificationLog(BaseModel):
         verbose_name_plural = "Email Notification Logs"
         db_table = "email_notification_logs"
         ordering = ("-created_at",)
+
+
+class UserNotificationChannel(BaseModel):
+    CHANNEL_CHOICES = (("telegram", "Telegram"), ("whatsapp", "WhatsApp"))
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notification_channels",
+    )
+    channel = models.CharField(max_length=20, choices=CHANNEL_CHOICES)
+    address = models.CharField(max_length=64, blank=True, default="")
+    pending_address = models.CharField(max_length=64, blank=True, default="")
+    verified_at = models.DateTimeField(null=True, blank=True)
+    enabled = models.BooleanField(default=False)
+    consented_at = models.DateTimeField(null=True, blank=True)
+    events = models.JSONField(default=list)
+    verification_hash = models.CharField(max_length=128, blank=True, default="")
+    verification_expires_at = models.DateTimeField(null=True, blank=True)
+    verification_attempts = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        verbose_name = "UserNotificationChannel"
+        verbose_name_plural = "UserNotificationChannels"
+        db_table = "user_notification_channels"
+        ordering = ("-created_at",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "channel"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="user_notification_channel_unique_user_channel_when_deleted_at_null",
+            )
+        ]
+
+    def __str__(self):
+        return f"<{self.user} {self.channel}>"
+
+
+class NotificationDelivery(BaseModel):
+    STATUS_CHOICES = (
+        ("pending", "Pending"),
+        ("sent", "Sent"),
+        ("failed", "Failed"),
+        ("skipped", "Skipped"),
+    )
+    notification = models.ForeignKey(
+        "db.Notification",
+        on_delete=models.CASCADE,
+        related_name="deliveries",
+    )
+    channel = models.CharField(max_length=20, choices=UserNotificationChannel.CHANNEL_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    attempts = models.PositiveSmallIntegerField(default=0)
+    reason = models.CharField(max_length=255, blank=True, default="")
+    external_id = models.CharField(max_length=128, blank=True, default="")
+
+    class Meta:
+        db_table = "notification_deliveries"
+        ordering = ("-created_at",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["notification", "channel"],
+                name="notification_delivery_unique_notification_channel",
+            )
+        ]
+
+    def __str__(self):
+        return f"<{self.notification_id} {self.channel} {self.status}>"

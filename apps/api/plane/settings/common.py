@@ -447,6 +447,9 @@ WEBHOOK_LOG_RETENTION_DAYS = _retention_days("WEBHOOK_LOG_RETENTION_DAYS", 14)
 # Email notification logs are retained on their own window.
 EMAIL_LOG_RETENTION_DAYS = _retention_days("EMAIL_LOG_RETENTION_DAYS", 7)
 
+# Notification delivery logs are retained on their own window.
+NOTIFICATION_DELIVERY_RETENTION_DAYS = _retention_days("NOTIFICATION_DELIVERY_RETENTION_DAYS", 30)
+
 # Instance Changelog URL
 INSTANCE_CHANGELOG_URL = os.environ.get("INSTANCE_CHANGELOG_URL", "")
 
