@@ -53,6 +53,53 @@
       "1_week": "1 semana",
       "2_weeks": "2 semanas",
       "custom": "Personalizado"
+    },
+    "channels": {
+      "heading": "Telegram e WhatsApp",
+      "description": "Receba notificações de itens de trabalho fora do Plane. Nada é enviado até que você vincule um canal e o ative.",
+      "telegram": "Telegram",
+      "whatsapp": "WhatsApp",
+      "status": {
+        "unavailable": "Indisponível — um administrador não configurou este canal.",
+        "linked": "Vinculado ({address})",
+        "pending": "Vinculação pendente",
+        "not_linked": "Não vinculado"
+      },
+      "link_telegram": "Vincular Telegram",
+      "telegram_hint": "Abra o bot, toque em Iniciar e volte para confirmar.",
+      "confirm_telegram": "Já toquei em Iniciar",
+      "phone_placeholder": "+5511999998888",
+      "send_code": "Enviar código",
+      "code_placeholder": "Código de 6 dígitos",
+      "verify": "Verificar",
+      "enable": "Receber notificações neste canal",
+      "consent": "Concordo em receber notificações de itens de trabalho neste canal. Posso desativar a qualquer momento, o que revoga meu consentimento.",
+      "events": "Eventos",
+      "unlink": "Desvincular",
+      "event": {
+        "state_change": "Mudanças de estado",
+        "issue_completed": "Item de trabalho concluído",
+        "comment": "Comentários",
+        "mention": "Menções",
+        "property_change": "Outras alterações (título, descrição, responsáveis, prioridade, datas…)"
+      },
+      "errors": {
+        "generic": "Algo deu errado.",
+        "invalid_phone": "Use o formato internacional, ex. +5511999998888.",
+        "invalid_code": "Código incorreto.",
+        "code_expired": "O código expirou. Solicite um novo.",
+        "too_many_attempts": "Muitas tentativas. Solicite um novo código.",
+        "wait_before_resending": "Aguarde um minuto antes de solicitar outro código.",
+        "start_message_not_found": "Não encontramos sua mensagem /start ainda. Abra o link, toque em Iniciar e tente novamente.",
+        "link_expired": "O link expirou. Gere um novo.",
+        "channel_unavailable": "Este canal não está disponível."
+      },
+      "toast": {
+        "saved": "Preferências salvas",
+        "linked": "Canal vinculado",
+        "unlinked": "Canal desvinculado",
+        "code_sent": "Código enviado via WhatsApp"
+      }
     }
   }
 }

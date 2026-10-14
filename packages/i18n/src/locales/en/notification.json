@@ -53,6 +53,53 @@
       "1_week": "1 week",
       "2_weeks": "2 weeks",
       "custom": "Custom"
+    },
+    "channels": {
+      "heading": "Telegram and WhatsApp",
+      "description": "Receive work item notifications outside Plane. Nothing is sent until you link a channel and turn it on.",
+      "telegram": "Telegram",
+      "whatsapp": "WhatsApp",
+      "status": {
+        "unavailable": "Not available — an administrator has not configured this channel.",
+        "linked": "Linked ({address})",
+        "pending": "Link pending",
+        "not_linked": "Not linked"
+      },
+      "link_telegram": "Link Telegram",
+      "telegram_hint": "Open the bot, tap Start, then come back and confirm.",
+      "confirm_telegram": "I've pressed Start",
+      "phone_placeholder": "+5511999998888",
+      "send_code": "Send code",
+      "code_placeholder": "6-digit code",
+      "verify": "Verify",
+      "enable": "Receive notifications on this channel",
+      "consent": "I agree to receive work item notifications on this channel. I can turn this off at any time, which revokes my consent.",
+      "events": "Events",
+      "unlink": "Unlink",
+      "event": {
+        "state_change": "State changes",
+        "issue_completed": "Work item completed",
+        "comment": "Comments",
+        "mention": "Mentions",
+        "property_change": "Other changes (title, description, assignees, priority, dates…)"
+      },
+      "errors": {
+        "generic": "Something went wrong.",
+        "invalid_phone": "Use international format, e.g. +5511999998888.",
+        "invalid_code": "Wrong code.",
+        "code_expired": "The code expired. Request a new one.",
+        "too_many_attempts": "Too many attempts. Request a new code.",
+        "wait_before_resending": "Wait a minute before requesting another code.",
+        "start_message_not_found": "We didn't find your /start message yet. Open the link, tap Start and try again.",
+        "link_expired": "The link expired. Generate a new one.",
+        "channel_unavailable": "This channel is not available."
+      },
+      "toast": {
+        "saved": "Preferences saved",
+        "linked": "Channel linked",
+        "unlinked": "Channel unlinked",
+        "code_sent": "Code sent via WhatsApp"
+      }
     }
   }
 }
